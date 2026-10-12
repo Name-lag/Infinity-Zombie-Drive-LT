@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#171b24">
+<title>INFINITY ZOMBIE DRIVE</title>
+<style>
+:root{--bg:#171b24;--panel:#242b38;--line:#65758b;--gold:#ffd166;--green:#6ee7a0;--red:#ff647c}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#f3f5f8;font-family:monospace,system-ui,sans-serif;touch-action:manipulation;image-rendering:pixelated}
+button{font:700 14px system-ui;cursor:pointer;border:2px solid #7789a3;border-radius:8px;background:#303b4d;color:#fff;padding:9px 12px}
+button:active{transform:translateY(1px)}button:disabled{opacity:.4;cursor:default}
+#app{height:100%;display:flex;flex-direction:column;gap:6px;padding:7px;max-width:1100px;margin:auto}
+#top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:800}
+.brand{color:var(--gold);letter-spacing:1px;font-size:15px}
+.stat{background:#252d3a;border:1px solid #46566d;border-radius:7px;padding:5px 8px;white-space:nowrap}
+#gameWrap{position:relative;flex:1;min-height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+canvas{display:block;width:100%;height:100%;max-height:calc(100vh - 210px);object-fit:contain;image-rendering:pixelated;border:2px solid #61728a;border-radius:7px;background:#303b38}
+#hudmsg{position:absolute;top:7px;left:8px;background:#121820cc;border:1px solid #7789a377;border-radius:5px;padding:5px 7px;font-size:12px}
+#bottom{display:flex;gap:7px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+#controls{display:flex;gap:6px;align-items:center}
+.ctrl{min-width:50px;min-height:43px;font-size:19px;padding:5px 10px;touch-action:none;user-select:none}
+#fire{background:#7b2838;border-color:#f17c88;min-width:76px}
+#menu{display:flex;gap:6px;flex-wrap:wrap}
+#overlay{position:fixed;inset:0;background:#080b11eF;display:flex;align-items:center;justify-content:center;padding:12px;z-index:5}
+.panel{width:min(940px,100%);max-height:96%;overflow:auto;background:#202836;border:2px solid #71829a;border-radius:12px;padding:14px;box-shadow:0 15px 60px #0009}
+h1{font-size:clamp(21px,4vw,32px);margin:0 0 5px;color:var(--gold)}h2{font-size:18px;margin:4px 0 10px}
+p{line-height:1.45;color:#d3dbe5;margin:7px 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.tabs button.active{background:#725d24;border-color:#ffd166;color:#fff3bd}
+.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px}
+.item{background:#252f3c;border:2px solid #52677b;border-radius:2px;padding:8px;min-width:0;box-shadow:inset -3px -3px #151d27,inset 3px 3px #354658}.item strong{font-family:monospace}.pixicon{width:22px;height:22px;vertical-align:middle;image-rendering:pixelated;shape-rendering:crispEdges;margin-right:5px}.portrait{width:42px;height:42px;image-rendering:pixelated;display:block;margin:0 auto 5px;border:2px solid #667a8c;background:#17202a}.item button,.tabs button{border-radius:2px;box-shadow:inset -2px -2px #17202a,inset 2px 2px #566b82}
+.item strong{display:block;font-size:13px;line-height:1.25;margin-bottom:4px}
+.item small{display:block;color:#c1cddd;line-height:1.35;font-size:11px}
+.item button{width:100%;margin-top:7px;padding:7px;font-size:12px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.meter{height:7px;background:#141a22;border-radius:6px;overflow:hidden;margin:5px 0}.meter span{display:block;height:100%;background:#6ee7a0}
+.note{font-size:12px;color:#bdc8d7}
+#toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#101720ee;border:1px solid #a7b6c9;border-radius:7px;padding:8px 12px;display:none;z-index:8;font-size:13px}
+@media(max-width:520px){#app{padding:4px;gap:4px}#top{font-size:11px}.brand{font-size:13px}.stat{padding:4px 5px}button{padding:8px 9px;font-size:12px}.ctrl{min-width:44px;min-height:42px}#bottom{gap:4px}#menu{gap:4px}.catalog{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:10px}}
+</style>
+</head>
+<body>
+<div id="app">
+ <div id="top">
+  <span class="brand"><span id="brandIcon"></span> INFINITY ZOMBIE DRIVE</span>
+  <span class="stat"><span id="moneyIcon"></span><b id="money">0</b></span>
+    <span class="stat">LYG. <b id="level">1</b> · ZOMBIŲ <b id="remaining">40</b></span>
+    <span class="stat"><span id="carIcon"></span><b id="carName">Kibiras 1984</b></span>
+ </div>
+ <div id="gameWrap">
+  <canvas id="game" width="640" height="360"></canvas>
+    <div id="hudmsg">WASD / ◀▶ judėti · SPACE / ŠAUDYTI</div>
+ </div>
+ <div id="bottom">
+  <div id="controls">
+    <button class="ctrl" id="left">◀</button><button class="ctrl" id="up">▲</button><button class="ctrl" id="down">▼</button><button class="ctrl" id="right">▶</button><button class="ctrl" id="fire"><span id="fireIcon"></span> ŠAUTI</button>
+  </div>
+  <div id="menu">
+    <button id="shopCar"><span id="carMenuIcon"></span> Mašinos</button><button id="shopGun"><span id="gunMenuIcon"></span> Ginklai</button><button id="shopHuman"><span id="humanMenuIcon"></span> Žmogiukas</button><button id="pause">Ⅱ Pauzė</button><button id="save"><span id="saveMenuIcon"></span> Išsaugoti</button>
+  </div>
+ </div>
+</div>
+<div id="overlay"><div class="panel" id="panel"></div></div>
+<div id="toast"></div>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+const $=id=>document.getElementById(id);
+const W=640,H=360;
+const carNames=[
+'Kibiras 1984','Surūdijęs sedanas','Senas universalas','Dūmų dėžė','Sulankstytas kupė','Taksi veteranė','Lėtas hečbekas','Dėdės „Volga“','Pavargęs pikapas','Rūdžių karalius',
+'Miesto vabalas','Geltonas taksi','Šeimos vežimas','Senas visureigis','Policijos klasika','Paprastas sedanas','Žalias universalas','Pirmas sportinis','Kaimo džipas','Tvirtas pikapas',
+'Retro kupė','Turbo hečbekas','Klasikinis raumeningas','Rally dėžutė','Miesto krosoveris','Greitoji klasika','Pusiau šarvuotas','Dykumos visureigis','Sportinis sedanas','Raudonas bolidas',
+'Rally žvėris','Šarvuotas furgonas','Policijos persekiojimo','Gatvės legenda','V8 kupė','Kalnų pikapas','Tvirtasis 4x4','Naktinis sedanas','Klasikinis superautomobilis','Juodasis žaibas',
+'Neoninis sportinis','Drifto kupė','GT lenktynininkas','Šarvuotas SUV','Raketinis hečbekas','Rally čempionas','Prabangus sedanas','Super pikapas','Plėšrūnas','Aukso kupė',
+'Hyper GT','Elektrinis sportinis','Ateities SUV','Neoninis interceptor','Šarvuotas tanketas','Vėjo pjovėjas','Turbo prototipas','Nakties fantomas','Krištolo kupė','Plazmos GT',
+'Elektrinis žaibas','Aerodinaminis X','Kosminis visureigis','Titanium GT','Šešėlių lenktynininkas','Mėlynoji strėlė','Pulsar kupė','Kvantinis SUV','Uragano GT','Kometos lenktynininkas',
+'Nova X1','Vortex Hyper','Aero Phantom','Quantum Racer','Solaris GT','Cyber Beast','Titan X','Neon Phoenix','Zero Gravity','Thunderbolt',
+'Infinity Prototype','Omega Hypercar','Astra Nova','Photon GT','Cybernetic SUV','Eclipse Racer','Quantum Phantom','Stellar V12','Nebula X','Apex Infinity',
+'Infinity One','Infinity Prime','Infinity Ultra','Infinity Hyper','Infinity Zenith','Infinity Singularity','Infinity Nova','Infinity Eternal','Infinity Godspeed','INFINITY OMEGA'
+];
+const gunNames=[
+'Surūdijęs pistoletas','Senas revolveris','Vienšūvis vamzdis','Kišeninis pistoletas','Medžioklinis šautuvas','Lėtas automatas','Senutėlis SMG','Dvigubas vamzdis','Paprastas pistoletas','Patikimas revolveris',
+'Lengvas pistoletas','Trumpas karabinas','Pumpinis šautuvas','9 mm automatas','Taktinis pistoletas','Greitas SMG','Medžiotojo karabinas','Pusiau automatinis','Kompaktiškas AR','Senas AK tipo',
+'Patobulintas revolveris','Taktinis SMG','Automatinis šautuvas','Sunkus pistoletas','Rally karabinas','Tylusis SMG','Kovinis šautuvas','Greitas karabinas','Snaiperio šautuvas','Dvigubas automatas',
+'Šarvamušis karabinas','Taktinis AR','Snaiperis MK II','Galingas pumpinis','Plieninis automatas','Burst karabinas','Ilgo nuotolio šautuvas','Sunkus AR','Greitašaudis SMG','Magnum revolveris',
+'Plazminis pistoletas','Neoninis karabinas','Elektrinis SMG','Lazerinis šautuvas','Impulsinis AR','Plazmos karabinas','Railgun prototipas','Kvantinis snaiperis','Fotonų patranka','INFINITY blaster'
+];
+const carColors=['#8a6a58','#6d7c86','#a14f4f','#7c8b56','#ba8c42','#537e8e','#9c7aa5','#bdc3c7','#476b59','#d6a34b'];
+const gunColors=['#b9c0c8','#a9a2a0','#d9b45b','#77b4c9','#9e85d7','#6be0b5'];
+function carStats(i){return {price:Math.round(12*Math.pow(1.095,i)),speed:1.05+i*.025,hp:100+i*4,armor:Math.min(.62,i*.006),power:1+Math.floor(i/12),color:carColors[i%carColors.length]}}
+function gunStats(i){return {price:Math.round(10*Math.pow(1.105,i)),damage:1+i*.55,rate:Math.max(7,27-Math.floor(i*.38)),color:gunColors[i%gunColors.length],bulletSpeed:4.5+i*.055}}
+const faceNames=['Šypsena','Drąsuolis','Akiniai','Rimtasis','Robotukas'];
+const facePrice=25;
+const outfits=[{name:'Pradedančiojo komplektas',shirt:'#3f9d7a',pants:'#344e9a',hp:10,price:15},{name:'Dykumos tyrinėtojas',shirt:'#d19b45',pants:'#795333',hp:20,price:35},{name:'Miesto gynėjas',shirt:'#4b83c5',pants:'#39424f',hp:30,price:60},{name:'Radioaktyvus kostiumas',shirt:'#86b64b',pants:'#364c35',hp:45,price:100},{name:'Pikselių čempionas',shirt:'#bd5cbb',pants:'#34304d',hp:65,price:160}];
+const defaults={money:30,level:1,kills:0,car:0,gun:0,face:0,outfit:0,ownedCars:[0],ownedGuns:[0],ownedFaces:[],ownedOutfits:[0],best:1};
+let state;
+function load(){try{let s=JSON.parse(localStorage.getItem('infinityZombieSave'));if(s&&Array.isArray(s.ownedCars)&&Array.isArray(s.ownedGuns))return {...defaults,...s,ownedFaces:Array.isArray(s.ownedFaces)?s.ownedFaces:[],ownedOutfits:Array.isArray(s.ownedOutfits)?s.ownedOutfits:[0]}}catch(e){}return {...defaults,ownedCars:[0],ownedGuns:[0],ownedFaces:[],ownedOutfits:[0]}}
+state=load();
+const keys={left:false,right:false,up:false,down:false,fire:false};
+let player={x:70,y:180,hp:100,face:1,shotCooldown:0,flash:0},zombies=[],bullets=[],particles=[],spawned=0,levelActive=false,paused=false,frame=0,mapIndex=0,toastTimer=0;
+const maps=[
+{name:'Apleistas miestelis',ground:'#59614d',road:'#55565b',accent:'#969b84'},
+{name:'Dykumos kelias',ground:'#aa8655',road:'#756044',accent:'#d6b678'},
+{name:'Užaugęs parkas',ground:'#3c674a',road:'#45564c',accent:'#76a96a'},
+{name:'Pramoninė zona',ground:'#454a50',road:'#333940',accent:'#858b92'},
+{name:'Apledėjęs priemiestis',ground:'#8397a6',road:'#526777',accent:'#c8e0e9'},
+{name:'Radioaktyvios pelkės',ground:'#536b43',road:'#3e5140',accent:'#9ab64f'}
+];
+let currentMap=maps[0];
+function save(){try{localStorage.setItem('infinityZombieSave',JSON.stringify(state));toast('Progresas išsaugotas!')}catch(e){toast('Naršyklė neleido išsaugoti.')}updateUI()}
+function toast(t){let el=$('toast');el.textContent=t;el.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',1800)}
+function updateUI(){$('money').textContent=state.money;$('level').textContent=state.level;$('remaining').textContent=Math.max(0,40-state.kills);$('carName').textContent=carNames[state.car];}
+function beep(f=400,d=.07,type='square',v=.025){try{let A=beep.audio||(beep.audio=new(window.AudioContext||window.webkitAudioContext)());if(A.state==='suspended')A.resume();let o=A.createOscillator(),g=A.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(A.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,A.currentTime+d);o.stop(A.currentTime+d)}catch(e){}}
+function pixelIcon(type){const shapes={coin:[[3,2,4,4,'#ffd166'],[7,2,4,4,'#ffd166'],[2,6,10,4,'#e4a82d'],[4,4,2,2,'#fff0a6']],car:[[2,7,12,4,'#d75b53'],[4,4,7,4,'#d75b53'],[5,5,2,2,'#9de0eb'],[9,5,2,2,'#9de0eb'],[3,10,3,3,'#202832'],[10,10,3,3,'#202832']],gun:[[2,4,8,3,'#a9bacb'],[8,6,4,2,'#a9bacb'],[4,7,3,5,'#75869a'],[11,3,3,2,'#d8e4ef']],person:[[5,2,5,5,'#e6b17c'],[4,7,7,5,'#4b9bd0'],[3,12,4,3,'#4059a1'],[8,12,4,3,'#4059a1'],[6,4,1,1,'#242424'],[9,4,1,1,'#242424']],save:[[3,2,10,12,'#6fc58a'],[5,3,6,3,'#d8e8f0'],[5,8,6,4,'#273647']],star:[[6,1,4,4,'#ffd166'],[3,5,10,4,'#ffd166'],[5,9,6,5,'#e6a83a']],hazard:[[2,2,12,12,'#d6e66a'],[5,4,6,8,'#263126'],[7,5,2,5,'#d6e66a']],shirt:[[4,3,3,3,'#4b9bd0'],[9,3,3,3,'#4b9bd0'],[3,5,10,7,'#4b9bd0'],[5,12,6,2,'#4b9bd0']],pants:[[4,2,8,5,'#4059a1'],[4,6,4,8,'#4059a1'],[8,6,4,8,'#4059a1']]};let a=shapes[type]||shapes.star;return `<svg class="pixicon" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${a.map(q=>`<rect x="${q[0]}" y="${q[1]}" width="${q[2]}" height="${q[3]}" fill="${q[4]}"/>`).join('')}</svg>`}
+function portraitCanvas(type,index=0){let c=document.createElement('canvas');c.width=32;c.height=32;c.className='portrait';let g=c.getContext('2d');g.imageSmoothingEnabled=false;g.fillStyle='#17202a';g.fillRect(0,0,32,32);let skin=['#e8b77e','#a96e48','#e4c39a','#c98e63','#b7c5ce'][index%5];g.fillStyle=skin;g.fillRect(9,5,14,14);g.fillStyle=['#57351e','#29232a','#6a4b31','#342a25','#4b6570'][index%5];g.fillRect(8,3,16,6);g.fillRect(7,6,3,7);g.fillRect(22,6,3,7);if(index===2){g.fillStyle='#17202a';g.fillRect(10,10,5,3);g.fillRect(18,10,5,3);g.fillRect(15,11,3,1)}else{g.fillStyle='#202020';g.fillRect(12,11,2,2);g.fillRect(19,11,2,2)}g.fillStyle=type==='face'?'#d77a6d':(outfits[index%outfits.length]?.shirt||'#4b9bd0');g.fillRect(7,20,18,8);g.fillRect(4,23,4,6);g.fillRect(24,23,4,6);g.fillStyle=type==='face'?'#d77a6d':(outfits[index%outfits.length]?.pants||'#4059a1');g.fillRect(9,27,5,4);g.fillRect(18,27,5,4);if(index===4){g.fillStyle='#73e0ce';g.fillRect(11,12,3,2);g.fillRect(19,12,3,2)}return c}
+function openMenu(tab='main'){
+ paused=true;$('overlay').style.display='flex';renderMenu(tab);
+}
+function closeMenu(){$('overlay').style.display='none';paused=false;lastTime=performance.now();requestAnimationFrame(loop)}
+function renderMenu(tab){
+ const panel=$('panel');
+ if(tab==='main'){
+    panel.innerHTML=`<h1>${pixelIcon('star')} INFINITY ZOMBIE DRIVE</h1><p>Begalinė 2D pikselių išgyvenimo kelionė. Vairuok, šaudyk zombius, rink pinigus ir pirk pikselių mašinas, ginklus, veidukus bei aprangą.</p>
+    <div class="row"><span class="stat">${pixelIcon('coin')} Pinigai: ${state.money}</span><span class="stat">${pixelIcon('car')} Mašinos: ${state.ownedCars.length}/100</span><span class="stat">${pixelIcon('gun')} Ginklai: ${state.ownedGuns.length}/50</span><span class="stat">${pixelIcon('star')} Lygis: ${state.level}</span></div>
+    <p>Viename lygyje – 40 zombių. Už kiekvieną gauni 2 pinigėlius. Kas 5 lygius pasikeičia žemėlapis, o zombiai tampa stipresni. Apranga prideda gyvybių. Progresas išsaugomas šiame įrenginyje.</p>
+    <div class="tabs"><button id="playBtn">▶ TĘSTI ŽAIDIMĄ</button><button id="carsBtn">${pixelIcon('car')} MAŠINOS</button><button id="gunsBtn">${pixelIcon('gun')} GINKLAI</button><button id="humanBtn">${pixelIcon('person')} ŽMOGIUKAS</button><button id="resetBtn">PRADĖTI IŠ NAUJO</button></div>
+    <p class="note">Valdymas: rodyklės / WASD judėti, mygtukas „ŠAUTI“ – šaudyti. Kompiuteryje – SPACE arba J šaudyti. Paspausk „Pauzė“ parduotuvėms žaidimo metu.</p>`;
+  $('playBtn').onclick=()=>{if(!levelActive)startLevel();closeMenu()};
+  $('carsBtn').onclick=()=>renderMenu('cars');$('gunsBtn').onclick=()=>renderMenu('guns');$('humanBtn').onclick=()=>renderMenu('human');
+    $('resetBtn').onclick=()=>{if(state.ownedCars.length>=100||state.ownedGuns.length>=50){state={...defaults,ownedCars:[0],ownedGuns:[0]};save();resetRun();renderMenu('main')}else if(confirm('Pradėti nuo nulio? Bus ištrintas visas progresas.')){state={...defaults,ownedCars:[0],ownedGuns:[0]};save();resetRun();renderMenu('main')}};
+ }else if(tab==='human'){
+    panel.innerHTML=`<h1>${pixelIcon('person')} ŽMOGIUKO PARDUOTUVĖ</h1><p>Pasirink veiduką, kuris kyšos pro mašinos langą, arba aprangos komplektą. Visi veidukai kainuoja vienodai. Apranga padidina maksimalias gyvybes.</p><div class="row"><span class="stat">${pixelIcon('coin')} Pinigai: ${state.money}</span><button id="back">← ATGAL</button></div><h2>Veidukai — kiekvienas ${facePrice} pinigėlių</h2><div class="catalog" id="faces"></div><h2>Marškinėliai + kelnės (komplektai)</h2><div class="catalog" id="outfits"></div>`;
+  $('back').onclick=()=>renderMenu('main');
+    const faces=$('faces');faceNames.forEach((name,i)=>{let owned=state.ownedFaces.includes(i),sel=state.face===i,item=document.createElement('div');item.className='item';item.appendChild(portraitCanvas('face',i));let title=document.createElement('strong');title.textContent=`${i+1}. ${name}`;item.appendChild(title);let small=document.createElement('small');small.textContent=`Kaina: ${facePrice} pinigėlių`;item.appendChild(small);let b=document.createElement('button');b.textContent=owned?(sel?'✓ NAUDOJAMAS':'PASIRINKTI'):'PIRKTI';b.disabled=sel&&owned;b.onclick=()=>{if(!owned&&state.money<facePrice){toast('Trūksta pinigėlių!');return}if(!owned){state.money-=facePrice;state.ownedFaces.push(i)}state.face=i;save();renderMenu('human')};item.appendChild(b);faces.appendChild(item)});
+    const out=$('outfits');outfits.forEach((o,i)=>{let owned=state.ownedOutfits.includes(i),sel=state.outfit===i,item=document.createElement('div');item.className='item';item.appendChild(portraitCanvas('outfit',i));let title=document.createElement('strong');title.textContent=o.name;item.appendChild(title);let small=document.createElement('small');small.textContent=`+${o.hp} maksimalių gyvybių · Kaina: ${o.price}`;item.appendChild(small);let b=document.createElement('button');b.textContent=sel?'✓ APRANGOS KOMPLEKTAS':owned?'PASIRINKTI':'PIRKTI';b.disabled=sel;b.onclick=()=>{if(!owned&&state.money<o.price){toast('Trūksta pinigėlių!');return}if(!owned){state.money-=o.price;state.ownedOutfits.push(i)}state.outfit=i;save();renderMenu('human')};item.appendChild(b);out.appendChild(item)});
+ }else if(tab==='cars'||tab==='guns'){
+  let cars=tab==='cars',list=cars?carNames:gunNames,owned=cars?state.ownedCars:state.ownedGuns,selected=cars?state.car:state.gun;
+    panel.innerHTML=`<h1>${pixelIcon(cars?'car':'gun')} ${cars?'MAŠINŲ GARAŽAS':'GINKLŲ ARSENALAS'}</h1><p>${cars?'100 skirtingų mašinų – nuo surūdijusio kibiro iki INFINITY OMEGA.':'50 ginklų – nuo silpno seno pistoleto iki INFINITY blaster.'} Kuo aukštesnis numeris, tuo brangiau ir paprastai stipriau.</p><div class="row"><span class="stat">${pixelIcon('coin')} ${state.money}</span><span class="stat">Įsigyta: ${owned.length}/${list.length}</span><button id="back">← ATGAL</button></div><div class="catalog" id="catalog"></div>`;
+  $('back').onclick=()=>renderMenu('main');
+  const cat=$('catalog');
+  list.forEach((name,i)=>{
+   let st=cars?carStats(i):gunStats(i),isOwned=owned.includes(i),isSel=selected===i;
+    let stats=cars?`Greitis ${st.speed.toFixed(1)} · Šarvai ${Math.round(st.armor*100)}% · HP ${st.hp}`:`Žala ${st.damage.toFixed(1)} · Tempas ${Math.round(60/st.rate*10)/10}/s`;
+   let item=document.createElement('div');item.className='item';
+    item.innerHTML=`<strong>${pixelIcon(cars?'car':'gun')} ${String(i+1).padStart(3,'0')}. ${name}</strong><small>${stats}</small><div class="meter"><span style="width:${Math.max(5,(i+1)/list.length*100)}%"></span></div><small>${pixelIcon('coin')} Kaina: ${st.price}</small><button ${isSel?'disabled':''}>${isSel?'✓ NAUDOJAMA':isOwned?'PASIRINKTI':'PIRKTI'}</button>`;
+   item.querySelector('button').onclick=()=>{
+    if(isOwned){if(cars)state.car=i;else state.gun=i;save();renderMenu(tab);return}
+    if(state.money<st.price){toast('Trūksta pinigų! Šaudyk zombius.');return}
+    state.money-=st.price;owned.push(i);if(cars)state.car=i;else state.gun=i;save();beep(700,.1,'triangle');renderMenu(tab);
+    if(state.ownedCars.length===100&&state.ownedGuns.length===50)toast('Surinkta visa kolekcija! Gali pradėti iš naujo.');
+   };cat.appendChild(item);
+  });
+ }
+}
+function resetRun(){levelActive=false;paused=true;zombies=[];bullets=[];particles=[];player={x:70,y:180,hp:100,face:1,shotCooldown:0,flash:0};state.level=1;state.kills=0;state.money=30;state.car=0;state.gun=0;state.face=0;state.outfit=0;state.ownedCars=[0];state.ownedGuns=[0];state.ownedFaces=[];state.ownedOutfits=[0];state.best=1;save();updateUI()}
+function startLevel(){
+ levelActive=true;paused=false;spawned=0;zombies=[];bullets=[];particles=[];state.kills=0;
+ mapIndex=Math.floor((state.level-1)/5)%maps.length;currentMap=maps[mapIndex];
+ let cs=carStats(state.car);player.x=70;player.y=180;player.hp=cs.hp+outfits[state.outfit].hp;player.shotCooldown=0;
+ spawnZombie();updateUI();
+}
+function spawnZombie(){
+ if(spawned>=40)return;
+ let tier=Math.floor((state.level-1)/5),hp=1+tier*0.6+(state.level-1)*.04;
+ zombies.push({x:W+20,y:60+Math.random()*(H-100),hp,maxHp:hp,speed:.35+tier*.055+Math.min(.3,state.level*.003),w:19,h:25,flash:0,kind:mapIndex});
+ spawned++;
+}
+function shoot(){
+ if(!levelActive||paused||player.shotCooldown>0)return;
+ let gs=gunStats(state.gun),cs=carStats(state.car);
+ player.shotCooldown=gs.rate;
+ bullets.push({x:player.x+18,y:player.y+12,vx:player.face*gs.bulletSpeed,damage:gs.damage+cs.power*.25,life:95});
+ beep(260+state.gun*3,.045,'square',.014);
+}
+function hitZombie(z,damage){z.hp-=damage;z.flash=4;for(let i=0;i<4;i++)particles.push({x:z.x,y:z.y+10,vx:(Math.random()-.5)*2,vy:(Math.random()-.5)*2,life:12,color:'#a6d36d'});if(z.hp<=0){zombies.splice(zombies.indexOf(z),1);state.money+=2;state.kills++;beep(90,.04,'sawtooth',.012);updateUI();if(state.kills>=40&&zombies.length===0&&spawned>=40)nextLevel()}}
+function nextLevel(){levelActive=false;state.level++;state.best=Math.max(state.best,state.level);save();updateUI();toast('Lygis įveiktas! +2 už kiekvieną zombį.');openMenu('main')}
+function drawCar(x,y){
+ let s=carStats(state.car);let col=s.color;
+ ctx.fillStyle='#18212b';ctx.fillRect(x+2,y+14,42,9);ctx.fillStyle=col;ctx.fillRect(x,y+7,46,12);ctx.fillRect(x+8,y+2,24,8);ctx.fillStyle='#aee7ef';ctx.fillRect(x+12,y+4,7,5);ctx.fillRect(x+22,y+4,7,5);
+ const skin=['#e8b77e','#a96e48','#e4c39a','#c98e63','#b7c5ce'][state.face||0],hair=['#57351e','#29232a','#6a4b31','#342a25','#4b6570'][state.face||0],out=outfits[state.outfit||0];ctx.fillStyle=out.shirt;ctx.fillRect(x+11,y+3,9,5);ctx.fillStyle=out.pants;ctx.fillRect(x+12,y+7,3,3);ctx.fillRect(x+17,y+7,3,3);ctx.fillStyle=skin;ctx.fillRect(x+12,y-5,8,8);ctx.fillStyle=hair;ctx.fillRect(x+11,y-6,9,3);ctx.fillRect(x+11,y-3,2,3);ctx.fillStyle='#202020';ctx.fillRect(x+14,y-2,1,1);ctx.fillRect(x+18,y-2,1,1);if((state.face||0)===2){ctx.fillStyle='#24252b';ctx.fillRect(x+13,y-2,3,2);ctx.fillRect(x+17,y-2,3,2);ctx.fillRect(x+16,y-1,1,1)}if((state.face||0)===4){ctx.fillStyle='#73e0ce';ctx.fillRect(x+13,y-2,2,2);ctx.fillRect(x+18,y-2,2,2)}ctx.fillStyle='#ffe49b';ctx.fillRect(x+42,y+10,4,3);ctx.fillStyle='#ff697d';ctx.fillRect(x,y+10,3,3);ctx.fillStyle='#11161e';ctx.fillRect(x+7,y+18,9,8);ctx.fillRect(x+31,y+18,9,8);ctx.fillStyle='#9299a2';ctx.fillRect(x+10,y+20,3,3);ctx.fillRect(x+34,y+20,3,3);
+ ctx.fillStyle=gunStats(state.gun).color;ctx.fillRect(x+25,y-1,19,3);ctx.fillRect(x+23,y-3,6,4);
+}
+function drawZombie(z){
+ let x=Math.round(z.x),y=Math.round(z.y),k=z.kind||0;
+ const palettes=[['#719653','#354532','#e9e6c5'],['#b8a05b','#73512f','#f7df93'],['#4e9b58','#245b35','#e9ffb2'],['#8b9298','#4a4f56','#ffcc68'],['#b7d4df','#527c91','#f4fbff'],['#a4d63f','#3c6034','#e9ff69']];let c=palettes[k%palettes.length];
+ ctx.fillStyle='#263126';ctx.fillRect(x+4,y+6,12,17);ctx.fillStyle=z.flash?'#f3ffb8':c[0];
+ if(k===1){ctx.fillRect(x+3,y+4,14,12);ctx.fillRect(x+5,y,10,7);ctx.fillStyle='#d5b56d';ctx.fillRect(x+1,y+2,18,3);ctx.fillStyle='#76542e';ctx.fillRect(x+5,y+18,4,5);ctx.fillRect(x+12,y+18,4,5)}
+ else if(k===2){ctx.fillRect(x+3,y+3,14,13);ctx.fillRect(x+6,y-1,8,7);ctx.fillStyle='#2c733e';ctx.fillRect(x+1,y+8,4,13);ctx.fillRect(x+16,y+9,5,12);ctx.fillStyle='#63bf64';ctx.fillRect(x+6,y+14,9,5)}
+ else if(k===3){ctx.fillRect(x+3,y+3,14,13);ctx.fillRect(x+5,y,10,7);ctx.fillStyle='#777e84';ctx.fillRect(x+2,y+8,4,12);ctx.fillRect(x+15,y+8,5,12);ctx.fillStyle='#f2b44c';ctx.fillRect(x+5,y+12,10,3)}
+ else if(k===4){ctx.fillRect(x+3,y+3,14,13);ctx.fillRect(x+5,y,10,7);ctx.fillStyle='#d8eaf0';ctx.fillRect(x+2,y+8,4,12);ctx.fillRect(x+15,y+8,5,12);ctx.fillStyle='#6d9caf';ctx.fillRect(x+5,y+13,10,3)}
+ else if(k===5){ctx.fillRect(x+3,y+3,14,13);ctx.fillRect(x+5,y,10,7);ctx.fillStyle='#4a7c32';ctx.fillRect(x+1,y+10,4,11);ctx.fillRect(x+16,y+10,5,11);ctx.fillStyle='#d8f65a';ctx.fillRect(x+5,y+13,10,3)}
+ else{ctx.fillRect(x+3,y+3,14,13);ctx.fillRect(x+5,y,10,7);ctx.fillStyle='#354532';ctx.fillRect(x+1,y+11,4,10);ctx.fillRect(x+15,y+12,5,9)}
+ ctx.fillStyle=c[2];ctx.fillRect(x+5,y+5,3,3);ctx.fillRect(x+12,y+5,3,3);ctx.fillStyle='#332b25';ctx.fillRect(x+6,y+11,8,2);ctx.fillStyle='#354532';ctx.fillRect(x+5,y+21,4,5);ctx.fillRect(x+12,y+21,4,5);
+ ctx.fillStyle='#1b2426';ctx.fillRect(x-1,y-5,21,3);ctx.fillStyle='#f06b6b';ctx.fillRect(x-1,y-5,21*Math.max(0,z.hp/z.maxHp),3);
+}
+function draw(){
+ let m=currentMap;ctx.fillStyle=m.ground;ctx.fillRect(0,0,W,H);
+ for(let y=0;y<H;y+=24)for(let x=0;x<W;x+=24){ctx.fillStyle=((x/24+y/24)%2)?'#ffffff08':'#00000008';ctx.fillRect(x,y,24,24)}
+ ctx.fillStyle=m.road;ctx.fillRect(0,105,W,150);ctx.fillStyle=m.accent;
+ for(let x=-(frame*1.5%70);x<W;x+=70)ctx.fillRect(x,177,35,4);
+ for(let i=0;i<12;i++){let x=((i*67-frame*.15)%700+700)%700-30;let hh=25+(i*29%55);ctx.fillStyle=i%2?'#202a30':'#38434a';ctx.fillRect(x,104-hh,24,hh);ctx.fillStyle=m.accent;for(let yy=110-hh;yy<100;yy+=12)ctx.fillRect(x+5,yy,4,4)}
+ for(let i=0;i<15;i++){let x=((i*53-frame*.35)%W+W)%W;ctx.fillStyle='#222b30';ctx.fillRect(x,260+(i*7%45),8,5);ctx.fillStyle=m.accent;ctx.fillRect(x+2,258+(i*7%45),3,2)}
+ if(mapIndex===1){for(let i=0;i<8;i++){let x=((i*91-frame*.22)%760+760)%760-40,y=i%2?62:278;ctx.fillStyle='#286b43';ctx.fillRect(x+5,y,7,27);ctx.fillRect(x,y+8,6,11);ctx.fillRect(x+12,y+13,6,10);ctx.fillStyle='#4a9a5b';ctx.fillRect(x+7,y+2,2,20);ctx.fillRect(x+2,y+10,2,6);ctx.fillRect(x+14,y+15,2,6);ctx.fillStyle='#d8bf8a';ctx.fillRect(x+4,y+4,1,2);ctx.fillRect(x+13,y+8,1,2)}}
+ if(mapIndex===5){for(let i=0;i<6;i++){let x=((i*113-frame*.12)%760+760)%760-35,y=i%2?72:277;ctx.fillStyle='#5d633f';ctx.fillRect(x,y+5,24,22);ctx.fillStyle='#a1ad4c';ctx.fillRect(x+2,y+2,20,5);ctx.fillStyle='#39432c';ctx.fillRect(x+3,y+10,18,13);ctx.fillStyle='#d5e66a';ctx.fillRect(x+8,y+8,8,8);ctx.fillStyle='#293329';ctx.fillRect(x+10,y+9,4,6);ctx.fillStyle='#d5e66a';ctx.fillRect(x+11,y+10,2,4);ctx.fillStyle='#f2e65d';ctx.fillRect(x+8,y+8,8,2);ctx.fillRect(x+8,y+14,8,2);ctx.fillRect(x+8,y+8,2,8);ctx.fillRect(x+14,y+8,2,8)}}
+ bullets.forEach(b=>{ctx.fillStyle=gunStats(state.gun).color;ctx.fillRect(b.x,b.y,8,3);ctx.fillStyle='#fff8c2';ctx.fillRect(b.x+5,b.y,3,2)});
+ zombies.forEach(drawZombie);
+ drawCar(player.x,player.y);
+ ctx.fillStyle='#111820';ctx.fillRect(10,10,120,8);ctx.fillStyle='#6ee7a0';ctx.fillRect(10,10,120*Math.max(0,player.hp/(carStats(state.car).hp+outfits[state.outfit||0].hp)),8);
+ ctx.fillStyle='#fff';ctx.font='bold 11px monospace';ctx.fillText('HP',10,29);
+ ctx.fillStyle='#101820bb';ctx.fillRect(W-184,10,174,43);ctx.fillStyle='#fff';ctx.font='bold 12px monospace';ctx.fillText('ŽEMĖLAPIS: '+m.name,W-176,25);ctx.fillText('LYG. '+state.level+'  |  '+Math.max(0,40-state.kills)+' LIKO',W-176,42);
+ particles.forEach(p=>{ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3)});
+}
+function update(dt){
+ frame++;
+ let cs=carStats(state.car),speed=cs.speed;
+ let dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0);
+ if(dx&&dy){dx*=.707;dy*=.707}
+ player.x=Math.max(5,Math.min(W-54,player.x+dx*speed*dt/16));
+ player.y=Math.max(42,Math.min(H-34,player.y+dy*speed*dt/16));
+ if(dx)player.face=dx>0?1:-1;
+ if(keys.fire)shoot();
+ if(player.shotCooldown>0)player.shotCooldown-=dt/16;
+ if(player.flash>0)player.flash--;
+ if(zombies.length===0&&spawned<40)spawnZombie();
+ bullets.forEach(b=>{b.x+=b.vx*dt/16;b.life-=dt/16;for(let z of zombies){if(b.x<z.x+19&&b.x+8>z.x&&b.y<z.y+26&&b.y+3>z.y){hitZombie(z,b.damage);b.life=0;break}}});
+ bullets=bullets.filter(b=>b.life>0&&b.x>-10&&b.x<W+20);
+ zombies.forEach(z=>{let dx=player.x+22-z.x,dy=player.y+13-z.y;let len=Math.max(1,Math.hypot(dx,dy));z.x+=dx/len*z.speed*dt/16;z.y+=dy/len*z.speed*.55*dt/16;if(Math.abs(dx)<34&&Math.abs(dy)<27){let armor=cs.armor;player.hp-=.13*(1-armor)*dt/16;if(player.hp<=0){state.money=Math.max(0,state.money-5);player.hp=cs.hp+outfits[state.outfit||0].hp;player.x=60;player.y=180;toast('Mašina apgadinta! Praradai 5 pinigėlius.');save()}}});
+ particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--});particles=particles.filter(p=>p.life>0);
+}
+let lastTime=0;
+function loop(now){if(!levelActive||paused)return;let dt=Math.min(35,now-(lastTime||now));lastTime=now;update(dt);draw();requestAnimationFrame(loop)}
+function play(){if(!levelActive)startLevel();else{paused=false;$('overlay').style.display='none';lastTime=performance.now();requestAnimationFrame(loop)}}
+function start(){openMenu('main');draw();updateUI()}
+$('shopCar').onclick=()=>openMenu('cars');$('shopGun').onclick=()=>openMenu('guns');$('shopHuman').onclick=()=>openMenu('human');$('pause').onclick=()=>openMenu('main');$('save').onclick=save;
+$('brandIcon').innerHTML=pixelIcon('star');$('fireIcon').innerHTML=pixelIcon('gun');$('moneyIcon').innerHTML=pixelIcon('coin');$('carIcon').innerHTML=pixelIcon('car');$('carMenuIcon').innerHTML=pixelIcon('car');$('gunMenuIcon').innerHTML=pixelIcon('gun');$('humanMenuIcon').innerHTML=pixelIcon('person');$('saveMenuIcon').innerHTML=pixelIcon('save');
+function bind(id,key){let b=$(id);let down=e=>{e.preventDefault();keys[key]=true};let up=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('pointerleave',up)}
+bind('left','left');bind('right','right');bind('up','up');bind('down','down');bind('fire','fire');
+window.addEventListener('keydown',e=>{let map={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',' ':'fire',j:'fire',J:'fire'};if(map[e.key]){keys[map[e.key]]=true;e.preventDefault()}if(e.key==='Escape'&&levelActive)openMenu('main')});
+window.addEventListener('keyup',e=>{let map={ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right',ArrowUp:'up',w:'up',ArrowDown:'down',s:'down',' ':'fire',j:'fire',J:'fire'};if(map[e.key])keys[map[e.key]]=false});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){Object.keys(keys).forEach(k=>keys[k]=false);if(levelActive)openMenu('main')}});
+window.addEventListener('beforeunload',()=>{try{localStorage.setItem('infinityZombieSave',JSON.stringify(state))}catch(e){}});
+updateUI();start();
+})();
+</script>
+</body>
+</html>
